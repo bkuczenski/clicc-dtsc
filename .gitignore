@@ -1,3 +1,4 @@
 .metadata
 src/clicc_dtsc/db1_password.txt
 src/clicc_dtsc/secret_key.txt
+*.pyc
