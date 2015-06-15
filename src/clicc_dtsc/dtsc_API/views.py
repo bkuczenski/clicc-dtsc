@@ -100,12 +100,14 @@ def moduleresults(request):
     else:
         R = R_qs[0].result
         
+    A = list(models.Annotation.objects.filter(uuid=R.uuid))
     return PrettyJsonResponse({
             'chemical': C.name,
             'property': P.name,
             'endpoint': P.endpoint,
             'resultuuid': str(R.uuid),
-            'result':   model_to_dict(R, ('unit','data_type','mean_value','st_dev'))
+            'result':   model_to_dict(R, ('unit','data_type','mean_value','st_dev')),
+            'annotations': [model_to_dict(a,('relation','annotation'),'uuid') for a in A]
         }, safe=False)
         
     
@@ -179,11 +181,13 @@ def lciaresults(request):
     R = results.lcia_dispatcher(P,L)
 
     if isinstance(R,models.RealResult):
+        A = list(models.Annotation.objects.filter(uuid=R.uuid))
         return PrettyJsonResponse({
             'product': P.name,
             'LciaMethod': L.name,
             'resultuuid': str(R.uuid),
-            'result':   model_to_dict(R, ('unit','data_type','mean_value','st_dev'))
+            'result':   model_to_dict(R, ('unit','data_type','mean_value','st_dev')),
+            'annotations': [model_to_dict(a,('relation','annotation'),'uuid') for a in A]
         }, safe=False)
     else:
         return PrettyJsonResponse({

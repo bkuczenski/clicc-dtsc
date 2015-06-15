@@ -6,7 +6,8 @@ from .models import *
 
 class PropertyAdmin(admin.ModelAdmin):
     # plural is properties
-    pass
+    list_display = ('id','name','endpoint')
+    readonly_fields=('id','uuid')
 
 class ConstituentInline(admin.StackedInline):
     model = ProductChemical
