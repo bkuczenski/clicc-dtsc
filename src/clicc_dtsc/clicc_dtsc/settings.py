@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
+#from django.conf.global_settings import DATABASE_ROUTERS
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -38,6 +39,9 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'tastypie',
+    'dtsc_API',
+    'extras'
 )
 
 MIDDLEWARE_CLASSES = (
@@ -75,19 +79,31 @@ WSGI_APPLICATION = 'clicc_dtsc.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
 
-with open(os.path.join(BASE_DIR,'db1_password.txt')) as p:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'HOST': 'db1.engr.ucsb.edu',
-            'PORT': '3306',
-            'NAME': 'clicc',
-            'USER': 'bkuczenski',
-            'PASSWORD': p.read().strip()
-            # is the SECRET_KEY above derived from the credentials I supplied in the creation dialog?
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'clicc',
+        'OPTIONS': {
+            'read_default_file': os.path.join(BASE_DIR,'clicc_dtsc/my.cnf')
+        }
+    },
+    'cliccTriple': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'cliccTriple',
+        'OPTIONS': {
+            'read_default_file': os.path.join(BASE_DIR,'clicc_dtsc/my.cnf')
+        }
+    },
+    'cliccActor': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'cliccActor',
+        'OPTIONS': {
+            'read_default_file': os.path.join(BASE_DIR,'clicc_dtsc/my.cnf')
         }
     }
+}
 
+DATABASE_ROUTERS = ['clicc_dtsc.router.CliccRouter']
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
@@ -107,3 +123,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
 STATIC_URL = '/static/'
+
+# other config
+TASTYPIE_DEFAULT_FORMATS = ['json']
