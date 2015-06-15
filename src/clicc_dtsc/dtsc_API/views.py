@@ -1,16 +1,17 @@
 from django.shortcuts import render
 import models, results
 from django.forms.models import model_to_dict
-from django.http.response import JsonResponse, HttpResponse
+from django.http.response import HttpResponse
 from django.core.exceptions import ObjectDoesNotExist
 from uuid import UUID
 from django.core import serializers
+from pretty_json import PrettyJsonResponse
 
 # Create your views here.
 
 def modules(request):
     ms = models.Module.objects.all()
-    return JsonResponse([model_to_dict(m) for m in ms] , safe=False)# 
+    return PrettyJsonResponse([model_to_dict(m) for m in ms] , safe=False)# 
  
 def validate_uuid4(uuid_string):
     """
@@ -92,16 +93,17 @@ def moduleresults(request):
             CP = models.ChemicalProperty(chemical=C, property=P, result=R)
             CP.save()
         else:
-            return JsonResponse({
+            return PrettyJsonResponse({
                 'chemical': C.name,
                 'property': P.name,
                 'result': R})
     else:
         R = R_qs[0].result
         
-    return JsonResponse({
+    return PrettyJsonResponse({
             'chemical': C.name,
             'property': P.name,
+            'endpoint': P.endpoint,
             'resultuuid': str(R.uuid),
             'result':   model_to_dict(R, ('unit','data_type','mean_value','st_dev'))
         }, safe=False)
@@ -114,18 +116,27 @@ def resultbyuuid(request, resultuuid):
         return HttpResponse("Not a valid UUID.")
     
     R = models.RealResult.objects.get(uuid=U)
-    A = models.Annotation.objects.get(uuid=U)
+    A = list(models.Annotation.objects.filter(uuid=U))
 
-    CP = models.ChemicalProperty.objects.get(result_id=R.id)
-
-    
-    return JsonResponse({
-            'chemical': CP.chemical.name,
-            'property': CP.property.name,
-            'resultuuid': str(R.uuid),
-            'result': model_to_dict(R,('unit','data_type','mean_value','st_dev')),
-            'annotation': A.relation + " | " + A.annotation
-                         })    
+    if [i for i in A if i.relation=='result']:
+        # if it has a result annotation, it's a ChemicalProperty result
+        CP = models.ChemicalProperty.objects.get(result_id=R.id)
+        return PrettyJsonResponse({
+                             'chemical': CP.chemical.name,
+                             'property': CP.property.name,
+                             'endpoint': CP.property.endpoint,
+                             'resultuuid': str(R.uuid),
+                             'result': model_to_dict(R,('unit','data_type','mean_value','st_dev')),
+                             'annotations': [model_to_dict(a,('relation','annotation'),'uuid') for a in A]
+                         })
+    else:
+        # not a ChemicalProperty-- just print result and annotations 
+        return PrettyJsonResponse({
+                             'resultuuid': str(R.uuid),
+                             'result': model_to_dict(R,('unit','data_type','mean_value','st_dev')),
+                             'annotations': [model_to_dict(a,('relation','annotation'),'uuid') for a in A]
+                         })
+           
     
 def lciaresults(request):
     """
@@ -168,14 +179,14 @@ def lciaresults(request):
     R = results.lcia_dispatcher(P,L)
 
     if isinstance(R,models.RealResult):
-        return JsonResponse({
+        return PrettyJsonResponse({
             'product': P.name,
             'LciaMethod': L.name,
             'resultuuid': str(R.uuid),
             'result':   model_to_dict(R, ('unit','data_type','mean_value','st_dev'))
         }, safe=False)
     else:
-        return JsonResponse({
+        return PrettyJsonResponse({
             'product': P.name,
             'LciaMethod': L.name,
             'result':   R})

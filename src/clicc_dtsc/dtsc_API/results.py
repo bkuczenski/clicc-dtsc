@@ -7,6 +7,7 @@ import random
 from extras.models import Combinedtox 
 from models import RealResult, Annotation
 import re
+from tastypie.utils.timezone import now
 
 class uResult:
     def __init__(self,unitname,value=0,stdev=0):
@@ -50,8 +51,10 @@ def module_dispatcher(prop, chemical, product=None):
     """
     
     M = prop.module
-    # these should all return a uresult and an annotation
+    # these should all return a ( uResult , annotation )
     uR, annot = {
+            'Module 01': (None, 'dummy'),
+            'Module 02': (None, 'dummy'),
             'ECHA CombinedTox': echa_tox_lookup(prop, chemical)
             }.get(M.name,random_result(prop.data_type))
     
@@ -69,6 +72,8 @@ def module_dispatcher(prop, chemical, product=None):
     R.save()
     A=Annotation(uuid=R.uuid,relation='result',annotation=annot)
     A.save()
+    Aa=Annotation(uuid=R.uuid,relation='created',annotation=now())
+    Aa.save()
 
     return R
 
@@ -89,5 +94,7 @@ def lcia_dispatcher(product, method):
     R.save()
     A=Annotation(uuid=R.uuid,relation=method.name,annotation=product.name + " | " + annot)
     A.save()
+    Aa=Annotation(uuid=R.uuid,relation='created',annotation=now())
+    Aa.save()
 
     return R
