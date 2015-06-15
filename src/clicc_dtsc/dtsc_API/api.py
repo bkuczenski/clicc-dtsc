@@ -7,10 +7,17 @@ import models
 from .pretty_json import PrettyJSONSerializer
 
 
+class ModuleResource(ModelResource):
+    fields = ('name',)
+
+    class Meta:
+        queryset = models.Module.objects.all()
+        resource_name = 'module'
 
 class PropertyResource(ModelResource):
     #def get_detail(self, request, parent_id):
     #    return { 'parent_id': parent_id}
+    module = tastypie.fields.ForeignKey(ModuleResource,'module', full=True)
 
     class Meta:
         queryset = models.Property.objects.all()
@@ -88,7 +95,7 @@ class AnnotationResource(ModelResource):
         
 
 class ProductResource(ModelResource):
-    application = tastypie.fields.ForeignKey(ApplicationResource,'application')
+    application = tastypie.fields.ForeignKey(ApplicationResource,'application', full=True)
 
     class Meta:
         queryset = models.Product.objects.all()
